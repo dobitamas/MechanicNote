@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MechanicNote.Controllers
 {
-    [Route("/Car/")]
+    [Route("/Car/")] 
     [ApiController]
     public class CarController : ControllerBase
     {
