@@ -1,9 +1,7 @@
 using MechanicNote.Interfaces;
-using MechanicNote.Models;
 using MechanicNote.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,10 +22,9 @@ namespace MechanicNote
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
-            services.AddDbContext<CarContext>(opt => opt.UseInMemoryDatabase(databaseName: "CarList").EnableSensitiveDataLogging());
             services.AddSingleton<ICarModelService, CarModelService>();
+            services.AddRazorPages();
             services.AddMvc();
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,27 +53,8 @@ namespace MechanicNote
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapRazorPages();
             });
         }
-
-        /*
-        public static void Seed(CarContext context)
-        {
-            foreach (var entity in context.CarModels)
-            {
-                context.CarModels.Remove(entity);
-                context.SaveChanges();
-            }
-                context.AddRange
-                    (
-                        new CarModel {Id = 1, Make = "Ford", Model = "Focus", Year = 2000, Type = Enums.TypeEnum.SEDAN,Code = "ford"},
-                        new CarModel {Id = 2, Make = "Alfa", Model = "Giulia", Year = 2019, Type = Enums.TypeEnum.SEDAN,Code = "alfa"},
-                        new CarModel {Id = 3, Make = "BWM", Model = "M3", Year = 2018, Type = Enums.TypeEnum.SEDAN, Code = "bmw"},
-                        new CarModel {Id = 4, Make = "AUDI", Model = "RS4", Year = 219, Type = Enums.TypeEnum.SEDAN, Code = "audi"}
-                    );
-
-        context.SaveChanges();
-        }
-        */
     }
 }

@@ -4,6 +4,7 @@ namespace MechanicNote.Models
 {
     public class CarModel
     {
+        private int lastId = 0;
         public int Id { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
@@ -12,9 +13,9 @@ namespace MechanicNote.Models
 
         public string Code { get; set; }
 
-        public CarModel(int id, string make, string model, int year, TypeEnum type, string code)
+        public CarModel(string make, string model, int year, TypeEnum type, string code)
         {
-            Id = id;
+            Id = CreateId();
             Make = make;
             Model = model;
             Year = year;
@@ -22,10 +23,9 @@ namespace MechanicNote.Models
             Code = code;
         }
 
-        public override bool Equals(object obj)
+        public int CreateId()
         {
-            return obj is CarModel carModel &&
-                   Id == carModel.Id;
+            return lastId++;
         }
     }
 }

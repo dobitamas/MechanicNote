@@ -1,108 +1,102 @@
-﻿using MechanicNote.Interfaces;
+﻿using MechanicNote.Enums;
 using MechanicNote.Models;
 using MechanicNote.Services;
+using MechanicNote.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MechanicNote.Controllers
 {
-    [Route("/Car/")] 
     [ApiController]
-    public class CarController : ControllerBase
+    [Route("[controller]")]
+    public class CarController : Controller
     {
-        private readonly CarContext _context;
+        #region Private Fields
+        private readonly ICarModelService _service;
+        #endregion
 
-        private readonly ICarModelService _service = new CarModelService();
-
-        public CarController(CarContext context, ICarModelService service)
+        #region Constructor
+        public CarController(ICarModelService service)
         {
-            _context = context;
             _service = service;
         }
+        #endregion
 
-        [HttpGet]
-        [Route("/list")]
-        public async Task<List<CarModel>> GetCars()
+        #region GetCar
+        [HttpGet("/Car/GetCars")]
+        public ActionResult GetCars()
         {
-             if(await _service.GetCars() != null)
-             {
-                return await _service.GetCars();
-             }
-             else
-             {
-                return new List<CarModel>();
-             }
+            var cars = _service.GetCars();
+            return View(cars);
         }
 
-        [HttpGet]
-        [Route("/get-car")]
-        public async Task<ActionResult<CarModel>> GetCarById(int id)
+        [HttpGet("ID/{id}", Name = "GetCar")]
+        public CarModel GetCarById(int id)
         {
-            /*
-            var carModel = await _service.GetCarById(id);
+            return _service.GetCarById(id);
+        }
+
+        [HttpGet("/GetByCode/{code}")]
+        public ActionResult GetCarByCode(string code)
+        {
+            var carModel = _service.GetCarByCode(code);
             if (carModel == null)
             {
-                return NotFound();
+                return View("Error");
             }
-            return carModel;
-            */
-            System.Console.WriteLine("Beléptem");
-            System.Console.WriteLine(_context.CarModels.Count());
-
-            return null;
+            return View("Details", carModel);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> PutCarModel(CarModel car)
+        #endregion
+
+        #region CreateCar
+        [HttpGet("/Car/Create")]
+        public ActionResult Create()
         {
-            _context.Entry(car).State = EntityState.Modified;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<CarModel>> PostCarModel(CarModel car)
-        {
-            _context.CarModels.Add(car);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetCarById), new { id = car.Id }, car);
-        }
-
-        [HttpDelete]
-        public async Task<ActionResult<CarModel>> DeleteCarModel(int id)
-        {
-            var carModel = await _context.CarModels.FindAsync(id);
-            if (carModel == null)
+            System.Console.WriteLine("Create hívódik");
+            var model = new CreateCarViewModel
             {
-                return NotFound();
-            }
+                Types = _service.GetTypes()
+            };
 
-            _context.CarModels.Remove(carModel);
-            await _context.SaveChangesAsync();
-
-            return carModel;
+            return View(model);
         }
 
-        private bool CarModelExists(int id)
+        [HttpPost(Name ="PostNewCar")]
+        public ActionResult PostNewCar([FromForm]CreateCarViewModel CreateCarViewModel)
         {
-            return _context.CarModels.Any(e => e.Id == id);
-        }
+            _service.AddCar(_service.ConvertViewModelToModel(CreateCarViewModel));
 
-        private List<CarModel> Seed()
+            return View("Index", _service.GetCars());
+        }
+        #endregion
+
+        #region EditCar
+        [HttpGet("/Car/Edit/{id}", Name = "Edit")]
+        public ActionResult Edit(int id)
         {
-            List<CarModel> CarModels = new List<CarModel>();
-            CarModels.Add(new CarModel(1, "ALFA", "Giulia", 2019, Enums.TypeEnum.SEDAN, "alfa"));
-            CarModels.Add(new CarModel(2, "BMW", "M3", 2010, Enums.TypeEnum.SEDAN, "bmw"));
-            CarModels.Add(new CarModel(3, "AUDI", "RS4", 2015, Enums.TypeEnum.SEDAN, "audi"));
-            CarModels.Add(new CarModel(4, "SKODA", "OCTAVIA", 2020, Enums.TypeEnum.SEDAN, "skoda"));
-
-            return CarModels;
+            return View(_service.ConvertEditModelToViewModel(_service.GetCarById(id)));
         }
+
+        [HttpPost(Name ="PostEditedCar")]
+        public ActionResult PostEditedCar([FromForm]EditCarViewModel CarView)
+        {
+            _service.DeleteCar(CarView.Id);
+            _service.AddCar(_service.ConvertEditModelToModel(CarView));
+
+            return View("Index", _service.GetCars());
+        }
+        #endregion
+
+        #region DeleteCar
+        [HttpGet("Delete/{id}", Name = "Delete")]
+        public RedirectToActionResult Delete(int id)
+        {
+            _service.DeleteCar(id);
+            return RedirectToAction("/list");
+        }
+        #endregion
+
+        
     }
 }
